@@ -10,7 +10,7 @@ import {
   ApiResponse
 } from "@/types";
 
-// This would normally come from environment variables
+// Update these values with your WordPress/WooCommerce site details
 const API_URL = 'https://your-wordpress-site.com/wp-json/wc/v3';
 const CONSUMER_KEY = 'your-woocommerce-consumer-key';
 const CONSUMER_SECRET = 'your-woocommerce-consumer-secret';
