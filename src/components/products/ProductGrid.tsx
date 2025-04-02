@@ -3,19 +3,21 @@ import { useState, useEffect } from "react";
 import { productApi } from "@/services/api";
 import { Product } from "@/types";
 import ProductCard from "./ProductCard";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ProductGridProps {
   categoryId?: number;
   limit?: number;
   title?: string;
   showFilters?: boolean;
+  sortBy?: string;
 }
 
-const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false }: ProductGridProps) => {
+const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false, sortBy = "popularity" }: ProductGridProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState("popularity");
+  const [selectedSortBy, setSortBy] = useState(sortBy);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -25,36 +27,40 @@ const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false }: Pro
           per_page: limit.toString()
         };
         
-        if (sortBy === "price_low") {
+        if (selectedSortBy === "price_low") {
           params.orderby = "price";
           params.order = "asc";
-        } else if (sortBy === "price_high") {
+        } else if (selectedSortBy === "price_high") {
           params.orderby = "price";
           params.order = "desc";
-        } else if (sortBy === "date") {
+        } else if (selectedSortBy === "date") {
           params.orderby = "date";
         } else {
           params.orderby = "popularity";
         }
         
+        console.log("Fetching products with params:", params);
+        
         let fetchedProducts;
         if (categoryId) {
-          fetchedProducts = await productApi.getProductsByCategory(categoryId);
+          params.category = categoryId.toString();
+          fetchedProducts = await productApi.getProducts(params);
         } else {
           fetchedProducts = await productApi.getProducts(params);
         }
         
+        console.log("Fetched products:", fetchedProducts);
         setProducts(fetchedProducts);
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to load products");
-        console.error(err);
+        console.error("Error fetching products:", err);
       } finally {
         setLoading(false);
       }
     };
 
     fetchProducts();
-  }, [categoryId, limit, sortBy]);
+  }, [categoryId, limit, selectedSortBy]);
 
   return (
     <div>
@@ -70,7 +76,7 @@ const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false }: Pro
               </label>
               <select
                 id="sort"
-                value={sortBy}
+                value={selectedSortBy}
                 onChange={(e) => setSortBy(e.target.value)}
                 className="py-1 px-2 border rounded text-sm focus:outline-none focus:ring-1 focus:ring-brand-navy"
               >
@@ -88,12 +94,12 @@ const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false }: Pro
       {loading && (
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {[...Array(limit)].map((_, index) => (
-            <div key={index} className="bg-white rounded-lg overflow-hidden shadow animate-pulse">
-              <div className="aspect-square bg-gray-200" />
+            <div key={index} className="bg-white rounded-lg overflow-hidden shadow">
+              <Skeleton className="aspect-square bg-gray-200" />
               <div className="p-4">
-                <div className="h-4 bg-gray-200 rounded mb-2" />
-                <div className="h-4 bg-gray-200 rounded w-3/4" />
-                <div className="h-6 bg-gray-200 rounded w-1/4 mt-2" />
+                <Skeleton className="h-4 bg-gray-200 rounded mb-2" />
+                <Skeleton className="h-4 bg-gray-200 rounded w-3/4 mb-2" />
+                <Skeleton className="h-6 bg-gray-200 rounded w-1/4 mt-2" />
               </div>
             </div>
           ))}

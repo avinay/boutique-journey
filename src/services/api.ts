@@ -46,13 +46,17 @@ export const productApi = {
   getProducts: async (params?: Record<string, string>): Promise<Product[]> => {
     try {
       const queryString = params ? new URLSearchParams(params).toString() : '';
-      const response = await fetch(`${API_URL}/products?${queryString}`, {
+      const url = `${API_URL}/products?${queryString}`;
+      console.log("API request URL:", url);
+      
+      const response = await fetch(url, {
         headers: getHeaders(),
       });
       
       if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
       
-      return await response.json();
+      const data = await response.json();
+      return data;
     } catch (error) {
       return handleApiError(error);
     }

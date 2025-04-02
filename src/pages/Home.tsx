@@ -7,6 +7,8 @@ import { Product, Category } from "@/types";
 import ProductGrid from "@/components/products/ProductGrid";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
 
 const Home = () => {
   const [featuredCategories, setFeaturedCategories] = useState<Category[]>([]);
@@ -16,9 +18,10 @@ const Home = () => {
     const fetchCategories = async () => {
       try {
         const categories = await productApi.getCategories();
+        console.log("Fetched categories:", categories);
         // Get first 3 categories with images
         const featured = categories
-          .filter(cat => cat.image && cat.image.src)
+          .filter(cat => cat.image?.src) // Only get categories with images
           .slice(0, 3);
         setFeaturedCategories(featured);
       } catch (error) {
@@ -42,10 +45,10 @@ const Home = () => {
             <div className="flex flex-col md:flex-row items-center justify-between">
               <div className="md:w-1/2 mb-10 md:mb-0">
                 <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 mb-4">
-                  Discover Premium Products
+                  Discover Premium Auto Parts
                 </h1>
                 <p className="text-xl text-gray-600 mb-8 max-w-md">
-                  Shop our curated collection of high-quality products for your lifestyle.
+                  Shop our curated collection of high-quality auto parts for cars, bikes, and trucks.
                 </p>
                 <div className="flex flex-wrap gap-4">
                   <Link to="/shop" className="btn-primary py-3 px-8">
@@ -59,7 +62,7 @@ const Home = () => {
               
               <div className="md:w-1/2">
                 <img 
-                  src="https://via.placeholder.com/600x400" 
+                  src="https://ohmyparty.in/autoparts/wp-content/uploads/2025/03/car-headlight.jpg" 
                   alt="Featured products" 
                   className="w-full rounded-lg shadow-xl"
                 />
@@ -76,7 +79,7 @@ const Home = () => {
             {loading ? (
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 {[1, 2, 3].map(i => (
-                  <div key={i} className="aspect-[3/2] rounded-lg bg-gray-200 animate-pulse" />
+                  <Skeleton key={i} className="aspect-[3/2] h-64 rounded-lg" />
                 ))}
               </div>
             ) : (
@@ -108,7 +111,11 @@ const Home = () => {
                   ))
                 ) : (
                   <div className="col-span-3 text-center py-10">
-                    <p className="text-gray-600">No categories found. Please add some categories to your store.</p>
+                    <Card>
+                      <CardContent className="pt-6">
+                        <p className="text-gray-600">No categories found with images. Please add some categories with images to your store.</p>
+                      </CardContent>
+                    </Card>
                   </div>
                 )}
               </div>
@@ -138,7 +145,7 @@ const Home = () => {
                 View All <ArrowRight size={16} className="ml-1" />
               </Link>
             </div>
-            <ProductGrid limit={4} />
+            <ProductGrid limit={4} sortBy="date" />
           </div>
         </section>
         
@@ -148,10 +155,10 @@ const Home = () => {
             <div className="flex flex-col md:flex-row items-center justify-between">
               <div className="md:w-1/2 mb-8 md:mb-0">
                 <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                  Summer Sale Is On!
+                  Auto Parts Sale Is On!
                 </h2>
                 <p className="text-lg text-white/90 mb-6">
-                  Get up to 50% off on selected items. Limited time offer.
+                  Get up to 50% off on selected auto parts. Limited time offer.
                 </p>
                 <Link to="/shop" className="bg-white text-brand-navy px-8 py-3 rounded-md hover:bg-opacity-90 inline-block">
                   Shop the Sale
@@ -159,8 +166,8 @@ const Home = () => {
               </div>
               <div className="md:w-1/2">
                 <img 
-                  src="https://via.placeholder.com/500x300" 
-                  alt="Summer Sale" 
+                  src="https://ohmyparty.in/autoparts/wp-content/uploads/2025/03/71kRLa2c2jL._AC_UF1000,1000_QL80_.jpg" 
+                  alt="Auto Parts Sale" 
                   className="w-full rounded-lg"
                 />
               </div>
