@@ -1,4 +1,3 @@
-
 import { toast } from "sonner";
 import { 
   Product, 
@@ -12,8 +11,8 @@ import {
 
 // Update these values with your WordPress/WooCommerce site details
 const API_URL = 'https://ohmyparty.in/autoparts/wp-json/wc/v3';
-const CONSUMER_KEY = 'your-woocommerce-consumer-key';
-const CONSUMER_SECRET = 'your-woocommerce-consumer-secret';
+const CONSUMER_KEY = 'ck_5190fcd4acc882402c34583eaafc187d981ddf78';
+const CONSUMER_SECRET = 'cs_17d7c67acc2e8b0675b54a375065a6b7d7bbbd21';
 
 // Helper to handle API errors
 const handleApiError = (error: any): never => {
