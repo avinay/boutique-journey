@@ -10,13 +10,18 @@ export const productApi = {
       console.log("API request URL:", url);
       
       const response = await fetch(url, {
+        method: 'GET',
         headers: getHeaders(),
+        mode: 'cors',
+        cache: 'no-cache',
       });
       
-      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Error ${response.status}: ${errorText || response.statusText}`);
+      }
       
-      const data = await response.json();
-      return data;
+      return await response.json();
     } catch (error) {
       return handleApiError(error);
     }
@@ -25,10 +30,16 @@ export const productApi = {
   getProduct: async (id: number): Promise<Product> => {
     try {
       const response = await fetch(`${API_URL}/products/${id}`, {
+        method: 'GET',
         headers: getHeaders(),
+        mode: 'cors',
+        cache: 'no-cache',
       });
       
-      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Error ${response.status}: ${errorText || response.statusText}`);
+      }
       
       return await response.json();
     } catch (error) {
@@ -39,10 +50,16 @@ export const productApi = {
   getCategories: async (): Promise<Category[]> => {
     try {
       const response = await fetch(`${API_URL}/products/categories`, {
+        method: 'GET',
         headers: getHeaders(),
+        mode: 'cors',
+        cache: 'no-cache',
       });
       
-      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Error ${response.status}: ${errorText || response.statusText}`);
+      }
       
       return await response.json();
     } catch (error) {
@@ -53,10 +70,16 @@ export const productApi = {
   getProductsByCategory: async (categoryId: number): Promise<Product[]> => {
     try {
       const response = await fetch(`${API_URL}/products?category=${categoryId}`, {
+        method: 'GET',
         headers: getHeaders(),
+        mode: 'cors',
+        cache: 'no-cache',
       });
       
-      if (!response.ok) throw new Error(`Error ${response.status}: ${response.statusText}`);
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Error ${response.status}: ${errorText || response.statusText}`);
+      }
       
       return await response.json();
     } catch (error) {

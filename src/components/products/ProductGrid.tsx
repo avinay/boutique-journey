@@ -4,6 +4,9 @@ import { productApi } from "@/services/api";
 import { Product } from "@/types";
 import ProductCard from "./ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ReloadIcon } from "@radix-ui/react-icons";
+import { Button } from "@/components/ui/button";
 
 interface ProductGridProps {
   categoryId?: number;
@@ -19,46 +22,47 @@ const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false, sortB
   const [error, setError] = useState<string | null>(null);
   const [selectedSortBy, setSortBy] = useState(sortBy);
 
-  useEffect(() => {
-    const fetchProducts = async () => {
-      setLoading(true);
-      try {
-        let params: Record<string, string> = {
-          per_page: limit.toString()
-        };
-        
-        if (selectedSortBy === "price_low") {
-          params.orderby = "price";
-          params.order = "asc";
-        } else if (selectedSortBy === "price_high") {
-          params.orderby = "price";
-          params.order = "desc";
-        } else if (selectedSortBy === "date") {
-          params.orderby = "date";
-        } else {
-          params.orderby = "popularity";
-        }
-        
-        console.log("Fetching products with params:", params);
-        
-        let fetchedProducts;
-        if (categoryId) {
-          params.category = categoryId.toString();
-          fetchedProducts = await productApi.getProducts(params);
-        } else {
-          fetchedProducts = await productApi.getProducts(params);
-        }
-        
-        console.log("Fetched products:", fetchedProducts);
-        setProducts(fetchedProducts);
-      } catch (err) {
-        setError(err instanceof Error ? err.message : "Failed to load products");
-        console.error("Error fetching products:", err);
-      } finally {
-        setLoading(false);
+  const fetchProducts = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      let params: Record<string, string> = {
+        per_page: limit.toString()
+      };
+      
+      if (selectedSortBy === "price_low") {
+        params.orderby = "price";
+        params.order = "asc";
+      } else if (selectedSortBy === "price_high") {
+        params.orderby = "price";
+        params.order = "desc";
+      } else if (selectedSortBy === "date") {
+        params.orderby = "date";
+      } else {
+        params.orderby = "popularity";
       }
-    };
+      
+      console.log("Fetching products with params:", params);
+      
+      let fetchedProducts;
+      if (categoryId) {
+        params.category = categoryId.toString();
+        fetchedProducts = await productApi.getProducts(params);
+      } else {
+        fetchedProducts = await productApi.getProducts(params);
+      }
+      
+      console.log("Fetched products:", fetchedProducts);
+      setProducts(fetchedProducts);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load products");
+      console.error("Error fetching products:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
+  useEffect(() => {
     fetchProducts();
   }, [categoryId, limit, selectedSortBy]);
 
@@ -109,8 +113,18 @@ const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false, sortB
       {/* Error State */}
       {error && !loading && (
         <div className="text-center py-10">
-          <div className="text-red-500 mb-2">Failed to load products</div>
-          <p className="text-gray-600">{error}</p>
+          <Alert variant="destructive" className="mb-4">
+            <AlertDescription>
+              {error}
+            </AlertDescription>
+          </Alert>
+          <Button 
+            onClick={fetchProducts}
+            className="flex items-center gap-2"
+          >
+            <ReloadIcon className="h-4 w-4" />
+            Retry
+          </Button>
         </div>
       )}
       

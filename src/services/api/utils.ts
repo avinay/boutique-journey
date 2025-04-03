@@ -25,7 +25,7 @@ export const getHeaders = (): HeadersInit => {
   if (token) {
     headers['Authorization'] = `Bearer ${token}`;
   } else {
-    // Use consumer key/secret for unauthenticated requests
+    // Use consumer key/secret for basic authentication
     const auth = btoa(`${CONSUMER_KEY}:${CONSUMER_SECRET}`);
     headers['Authorization'] = `Basic ${auth}`;
   }
