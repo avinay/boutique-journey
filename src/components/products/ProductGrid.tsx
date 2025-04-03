@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { RefreshCw } from "lucide-react"; // Changed from ReloadIcon to RefreshCw from lucide-react
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface ProductGridProps {
   categoryId?: number;
@@ -16,11 +17,62 @@ interface ProductGridProps {
   sortBy?: string;
 }
 
+// Mock data for when the API fails
+const mockProducts: Product[] = [
+  {
+    id: 1,
+    name: "Sample Product 1",
+    slug: "sample-product-1",
+    permalink: "",
+    date_created: new Date().toISOString(),
+    price: "24.99",
+    regular_price: "29.99",
+    sale_price: "24.99",
+    description: "This is a sample product description.",
+    short_description: "Sample product",
+    categories: [{ id: 1, name: "Sample", slug: "sample", parent: 0, description: "", count: 5, image: null }],
+    images: [{ id: 1, src: "https://via.placeholder.com/300x300", alt: "Sample Product" }],
+    attributes: [],
+    variations: [],
+    stock_status: "instock",
+    average_rating: "4.5"
+  },
+  {
+    id: 2,
+    name: "Sample Product 2",
+    slug: "sample-product-2",
+    permalink: "",
+    date_created: new Date().toISOString(),
+    price: "19.99",
+    regular_price: "19.99",
+    sale_price: "",
+    description: "This is another sample product description.",
+    short_description: "Another sample",
+    categories: [{ id: 1, name: "Sample", slug: "sample", parent: 0, description: "", count: 5, image: null }],
+    images: [{ id: 2, src: "https://via.placeholder.com/300x300", alt: "Sample Product" }],
+    attributes: [],
+    variations: [],
+    stock_status: "instock",
+    average_rating: "4.0"
+  },
+];
+
+// Generate multiple mock products based on the limit
+const generateMockProducts = (count: number): Product[] => {
+  return Array.from({ length: count }).map((_, index) => ({
+    ...mockProducts[index % mockProducts.length],
+    id: index + 1,
+    name: `Sample Product ${index + 1}`,
+    slug: `sample-product-${index + 1}`
+  }));
+};
+
 const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false, sortBy = "popularity" }: ProductGridProps) => {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedSortBy, setSortBy] = useState(sortBy);
+  const [useMockData, setUseMockData] = useState(false);
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -45,14 +97,29 @@ const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false, sortB
       console.log("Fetching products with params:", params);
       
       let fetchedProducts;
-      if (categoryId) {
-        params.category = categoryId.toString();
-        fetchedProducts = await productApi.getProducts(params);
+      if (useMockData) {
+        // Use mock data when API fails
+        console.log("Using mock data");
+        fetchedProducts = generateMockProducts(limit);
+        toast.info("Using demo data - API connection failed");
       } else {
-        fetchedProducts = await productApi.getProducts(params);
+        // Try to fetch real data
+        try {
+          if (categoryId) {
+            params.category = categoryId.toString();
+            fetchedProducts = await productApi.getProducts(params);
+          } else {
+            fetchedProducts = await productApi.getProducts(params);
+          }
+        } catch (apiError) {
+          console.error("API fetch failed, switching to mock data:", apiError);
+          setUseMockData(true);
+          fetchedProducts = generateMockProducts(limit);
+          toast.info("Using demo data - API connection failed");
+        }
       }
       
-      console.log("Fetched products:", fetchedProducts);
+      console.log("Products to display:", fetchedProducts);
       setProducts(fetchedProducts);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load products");
@@ -60,6 +127,12 @@ const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false, sortB
     } finally {
       setLoading(false);
     }
+  };
+
+  // Switch to real API data
+  const switchToRealData = () => {
+    setUseMockData(false);
+    fetchProducts();
   };
 
   useEffect(() => {
@@ -110,20 +183,46 @@ const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false, sortB
         </div>
       )}
 
-      {/* Error State */}
-      {error && !loading && (
+      {/* Error State - only shows when we're not using mock data */}
+      {error && !loading && !useMockData && (
         <div className="text-center py-10">
           <Alert variant="destructive" className="mb-4">
             <AlertDescription>
               {error}
             </AlertDescription>
           </Alert>
+          <div className="flex gap-4 justify-center">
+            <Button 
+              onClick={fetchProducts}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className="h-4 w-4" /> {/* Changed from ReloadIcon to RefreshCw */}
+              Retry
+            </Button>
+            <Button 
+              onClick={() => {
+                setUseMockData(true);
+                fetchProducts();
+              }}
+              variant="outline"
+            >
+              Use Demo Data
+            </Button>
+          </div>
+        </div>
+      )}
+      
+      {/* Demo mode indicator */}
+      {useMockData && !loading && (
+        <div className="mb-4 bg-yellow-50 border border-yellow-200 rounded p-3 text-sm flex items-center justify-between">
+          <span className="text-yellow-800">Using demo data. Real API connection failed.</span>
           <Button 
-            onClick={fetchProducts}
-            className="flex items-center gap-2"
+            onClick={switchToRealData} 
+            variant="outline" 
+            size="sm"
+            className="text-xs"
           >
-            <RefreshCw className="h-4 w-4" /> {/* Changed from ReloadIcon to RefreshCw */}
-            Retry
+            Try Real API
           </Button>
         </div>
       )}
