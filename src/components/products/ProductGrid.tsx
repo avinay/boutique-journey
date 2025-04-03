@@ -5,7 +5,7 @@ import { Product } from "@/types";
 import ProductCard from "./ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { RefreshCw } from "lucide-react"; // Changed from ReloadIcon to RefreshCw from lucide-react
+import { RefreshCw } from "lucide-react"; // Using lucide-react icon
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -73,10 +73,12 @@ const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false, sortB
   const [error, setError] = useState<string | null>(null);
   const [selectedSortBy, setSortBy] = useState(sortBy);
   const [useMockData, setUseMockData] = useState(false);
+  const [apiErrorDetails, setApiErrorDetails] = useState<string | null>(null);
 
   const fetchProducts = async () => {
     setLoading(true);
     setError(null);
+    setApiErrorDetails(null);
     try {
       let params: Record<string, string> = {
         per_page: limit.toString()
@@ -105,14 +107,34 @@ const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false, sortB
       } else {
         // Try to fetch real data
         try {
+          const queryString = params ? new URLSearchParams(params).toString() : '';
+          const apiUrl = `https://ohmyparty.in/autoparts/wp-json/wc/v3/products?${queryString}`;
+          console.log("Testing direct API call to:", apiUrl);
+          
+          // Make a test call directly to check for CORS issues
+          const testResponse = await fetch(apiUrl, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': 'Basic ' + btoa('ck_5190fcd4acc882402c34583eaafc187d981ddf78:cs_17d7c67acc2e8b0675b54a375065a6b7d7bbbd21')
+            },
+            mode: 'cors',
+          });
+          
+          console.log("Direct API call result:", testResponse.status, testResponse.statusText);
+          
+          // Now try with our API service
           if (categoryId) {
             params.category = categoryId.toString();
             fetchedProducts = await productApi.getProducts(params);
           } else {
             fetchedProducts = await productApi.getProducts(params);
           }
+          
+          console.log("Products fetched successfully:", fetchedProducts);
         } catch (apiError) {
-          console.error("API fetch failed, switching to mock data:", apiError);
+          console.error("API fetch failed, details:", apiError);
+          setApiErrorDetails(apiError instanceof Error ? apiError.message : JSON.stringify(apiError));
           setUseMockData(true);
           fetchedProducts = generateMockProducts(limit);
           toast.info("Using demo data - API connection failed");
@@ -122,7 +144,8 @@ const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false, sortB
       console.log("Products to display:", fetchedProducts);
       setProducts(fetchedProducts);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to load products");
+      const errorMessage = err instanceof Error ? err.message : "Failed to load products";
+      setError(errorMessage);
       console.error("Error fetching products:", err);
     } finally {
       setLoading(false);
@@ -183,7 +206,7 @@ const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false, sortB
         </div>
       )}
 
-      {/* Error State - only shows when we're not using mock data */}
+      {/* Error State and API Debug Information */}
       {error && !loading && !useMockData && (
         <div className="text-center py-10">
           <Alert variant="destructive" className="mb-4">
@@ -191,12 +214,20 @@ const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false, sortB
               {error}
             </AlertDescription>
           </Alert>
+          
+          {apiErrorDetails && (
+            <div className="bg-gray-100 border rounded p-3 mb-4 text-sm overflow-auto max-h-40 text-left">
+              <h4 className="font-medium mb-1">API Error Details:</h4>
+              <pre className="whitespace-pre-wrap">{apiErrorDetails}</pre>
+            </div>
+          )}
+          
           <div className="flex gap-4 justify-center">
             <Button 
               onClick={fetchProducts}
               className="flex items-center gap-2"
             >
-              <RefreshCw className="h-4 w-4" /> {/* Changed from ReloadIcon to RefreshCw */}
+              <RefreshCw className="h-4 w-4" />
               Retry
             </Button>
             <Button 

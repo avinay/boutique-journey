@@ -9,6 +9,22 @@ export const CONSUMER_SECRET = 'cs_17d7c67acc2e8b0675b54a375065a6b7d7bbbd21';
 // Helper to handle API errors
 export const handleApiError = (error: any): never => {
   console.error('API Error:', error);
+  
+  // More detailed logging for debugging
+  if (error instanceof Error) {
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    
+    // Special handling for CORS errors
+    if (error.message.includes('Failed to fetch') || error.name === 'TypeError') {
+      console.warn('This may be a CORS issue. Make sure the API allows cross-origin requests from this domain.');
+      const corsMessage = 'API request failed - this might be due to CORS restrictions on the API server.';
+      toast.error(corsMessage);
+      throw new Error(corsMessage);
+    }
+  }
+  
   const message = error?.response?.data?.message || 'An error occurred. Please try again.';
   toast.error(message);
   throw new Error(message);

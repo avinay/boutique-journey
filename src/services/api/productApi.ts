@@ -9,20 +9,32 @@ export const productApi = {
       const url = `${API_URL}/products?${queryString}`;
       console.log("API request URL:", url);
       
+      const headers = getHeaders();
+      console.log("Request headers:", JSON.stringify(headers, null, 2));
+      
       const response = await fetch(url, {
         method: 'GET',
-        headers: getHeaders(),
+        headers: headers,
         mode: 'cors',
         cache: 'no-cache',
       });
       
       if (!response.ok) {
         const errorText = await response.text();
+        console.error("API response error:", response.status, response.statusText, errorText);
         throw new Error(`Error ${response.status}: ${errorText || response.statusText}`);
       }
       
-      return await response.json();
+      const data = await response.json();
+      console.log("API response data received");
+      return data;
     } catch (error) {
+      console.error("getProducts error details:", error);
+      if (error instanceof Error) {
+        console.error("Error name:", error.name);
+        console.error("Error message:", error.message);
+        console.error("Error stack:", error.stack);
+      }
       return handleApiError(error);
     }
   },
