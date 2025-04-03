@@ -1,8 +1,12 @@
 
 import { Product, Category } from "@/types";
-import { API_URL, getHeaders, handleApiError } from "./utils";
+import { API_URL, getHeaders, handleApiError, testApiConnection } from "./utils";
 
 export const productApi = {
+  testConnection: async () => {
+    return await testApiConnection();
+  },
+  
   getProducts: async (params?: Record<string, string>): Promise<Product[]> => {
     try {
       const queryString = params ? new URLSearchParams(params).toString() : '';
@@ -17,6 +21,8 @@ export const productApi = {
         headers: headers,
         mode: 'cors',
         cache: 'no-cache',
+        // Add credentials: 'include' to send cookies if needed
+        // credentials: 'include',
       });
       
       if (!response.ok) {
@@ -26,7 +32,7 @@ export const productApi = {
       }
       
       const data = await response.json();
-      console.log("API response data received");
+      console.log("API response data received:", data.length, "products");
       return data;
     } catch (error) {
       console.error("getProducts error details:", error);

@@ -4,6 +4,8 @@ import ProductGrid from "@/components/products/ProductGrid";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 const ShopPage = () => {
   const [pageSize, setPageSize] = useState(12);
@@ -17,6 +19,13 @@ const ShopPage = () => {
           <div className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold mb-2">Shop</h1>
             <p className="text-gray-600">Browse our complete collection of products</p>
+            
+            <Alert variant="warning" className="mt-4">
+              <AlertCircle className="h-4 w-4 mr-2" />
+              <AlertDescription>
+                Our shop is currently in diagnostic mode. You may see some test data while we resolve API connection issues.
+              </AlertDescription>
+            </Alert>
           </div>
           
           <div className="flex flex-col md:flex-row gap-8">

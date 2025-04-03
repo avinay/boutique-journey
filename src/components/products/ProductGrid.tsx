@@ -5,7 +5,7 @@ import { Product } from "@/types";
 import ProductCard from "./ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { RefreshCw } from "lucide-react"; // Using lucide-react icon
+import { RefreshCw, AlertTriangle, Info } from "lucide-react"; // Using lucide-react icons
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
@@ -74,6 +74,33 @@ const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false, sortB
   const [selectedSortBy, setSortBy] = useState(sortBy);
   const [useMockData, setUseMockData] = useState(false);
   const [apiErrorDetails, setApiErrorDetails] = useState<string | null>(null);
+  const [connectionTestResult, setConnectionTestResult] = useState<any>(null);
+  const [isTesting, setIsTesting] = useState(false);
+
+  // Test API connection
+  const testConnection = async () => {
+    setIsTesting(true);
+    try {
+      const result = await productApi.testConnection();
+      setConnectionTestResult(result);
+      console.log("API connection test result:", result);
+      
+      if (result.success) {
+        toast.success("API connection successful!");
+      } else {
+        toast.error(`API connection failed: ${result.message}`);
+      }
+    } catch (err) {
+      console.error("Error testing connection:", err);
+      setConnectionTestResult({
+        success: false,
+        message: err instanceof Error ? err.message : "Unknown error during connection test",
+        details: err
+      });
+    } finally {
+      setIsTesting(false);
+    }
+  };
 
   const fetchProducts = async () => {
     setLoading(true);
@@ -107,41 +134,26 @@ const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false, sortB
       } else {
         // Try to fetch real data
         try {
-          const queryString = params ? new URLSearchParams(params).toString() : '';
-          const apiUrl = `https://ohmyparty.in/autoparts/wp-json/wc/v3/products?${queryString}`;
-          console.log("Testing direct API call to:", apiUrl);
-          
-          // Make a test call directly to check for CORS issues
-          const testResponse = await fetch(apiUrl, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Basic ' + btoa('ck_5190fcd4acc882402c34583eaafc187d981ddf78:cs_17d7c67acc2e8b0675b54a375065a6b7d7bbbd21')
-            },
-            mode: 'cors',
-          });
-          
-          console.log("Direct API call result:", testResponse.status, testResponse.statusText);
-          
-          // Now try with our API service
           if (categoryId) {
             params.category = categoryId.toString();
-            fetchedProducts = await productApi.getProducts(params);
-          } else {
-            fetchedProducts = await productApi.getProducts(params);
           }
           
+          // Make a direct diagnostic API call to see what's happening
+          console.log("Making direct diagnostic API call");
+          const apiUrl = `${params ? new URLSearchParams(params).toString() : ''}`;
+          console.log("Full API URL:", `${API_URL}/products?${apiUrl}`);
+          
+          fetchedProducts = await productApi.getProducts(params);
           console.log("Products fetched successfully:", fetchedProducts);
         } catch (apiError) {
           console.error("API fetch failed, details:", apiError);
           setApiErrorDetails(apiError instanceof Error ? apiError.message : JSON.stringify(apiError));
           setUseMockData(true);
           fetchedProducts = generateMockProducts(limit);
-          toast.info("Using demo data - API connection failed");
+          toast.error("API connection failed - using demo data instead");
         }
       }
       
-      console.log("Products to display:", fetchedProducts);
       setProducts(fetchedProducts);
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Failed to load products";
@@ -189,6 +201,42 @@ const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false, sortB
           )}
         </div>
       )}
+      
+      {/* Connection Test Button */}
+      <div className="mb-4">
+        <Button 
+          onClick={testConnection} 
+          variant="outline" 
+          size="sm"
+          disabled={isTesting}
+          className="mb-2"
+        >
+          {isTesting ? "Testing connection..." : "Test API Connection"}
+        </Button>
+        
+        {connectionTestResult && (
+          <div className={`border rounded p-3 text-sm ${connectionTestResult.success ? 'bg-green-50 border-green-200' : 'bg-red-50 border-red-200'}`}>
+            <div className="flex items-start gap-2">
+              {connectionTestResult.success ? 
+                <Info className="h-5 w-5 text-green-600 mt-0.5" /> : 
+                <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />}
+              <div>
+                <p className={connectionTestResult.success ? 'text-green-800' : 'text-red-800'}>
+                  {connectionTestResult.message}
+                </p>
+                {connectionTestResult.details && typeof connectionTestResult.details === 'object' && (
+                  <details className="mt-2">
+                    <summary className="cursor-pointer text-xs font-medium">Show technical details</summary>
+                    <pre className="mt-2 whitespace-pre-wrap text-xs bg-gray-100 p-2 rounded overflow-auto max-h-40">
+                      {JSON.stringify(connectionTestResult.details, null, 2)}
+                    </pre>
+                  </details>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
       
       {/* Loading State */}
       {loading && (
