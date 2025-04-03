@@ -5,7 +5,7 @@ import { Product } from "@/types";
 import ProductCard from "./ProductCard";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { ReloadIcon } from "@radix-ui/react-icons";
+import { RefreshCw } from "lucide-react"; // Changed from ReloadIcon to RefreshCw from lucide-react
 import { Button } from "@/components/ui/button";
 
 interface ProductGridProps {
@@ -122,7 +122,7 @@ const ProductGrid = ({ categoryId, limit = 12, title, showFilters = false, sortB
             onClick={fetchProducts}
             className="flex items-center gap-2"
           >
-            <ReloadIcon className="h-4 w-4" />
+            <RefreshCw className="h-4 w-4" /> {/* Changed from ReloadIcon to RefreshCw */}
             Retry
           </Button>
         </div>
